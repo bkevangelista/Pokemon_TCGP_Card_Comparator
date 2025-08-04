@@ -13,6 +13,7 @@ async def main():
 
     for tcgp_set in tcgp_sets:
         set_name = tcgp_set.name
+        set_id = tcgp_set.id
         set_data = await tcgdex.set.get(tcgp_set.id)
         cards = set_data.cards
 
@@ -22,7 +23,9 @@ async def main():
                 "id": card.id,
                 "name": card.name,
                 "localId": card.localId,
-                "rarity": card_metadata.rarity,
+                "rarity": card_metadata.rarity if card_metadata.rarity != "None" else None,
+                "set_name": set_name,
+                "set_id": set_id,
             }
             print("Card being processed: ", c)
 
