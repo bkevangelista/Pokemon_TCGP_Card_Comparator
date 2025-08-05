@@ -1,37 +1,18 @@
-import asyncio
-from collections import defaultdict
+from fastapi import FastAPI
+from backend.src.routes.routes import router
+from fastapi.middleware.cors import CORSMiddleware
 
-from tcgdexsdk import TCGdex
+app = FastAPI(debug=True)
 
-async def main():
-    # Init the SDK
-    tcgdex = TCGdex()
-    tcgp_series = await tcgdex.serie.get("tcgp")
-    tcgp_sets = tcgp_series.sets
+import sys
+print(sys.path)
 
-    cards_by_set = defaultdict(list)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    for tcgp_set in tcgp_sets:
-        set_name = tcgp_set.name
-        set_id = tcgp_set.id
-        set_data = await tcgdex.set.get(tcgp_set.id)
-        cards = set_data.cards
-
-        for card in cards:
-            card_metadata = await tcgdex.card.get(card.id)
-            c = {
-                "id": card.id,
-                "name": card.name,
-                "localId": card.localId,
-                "rarity": card_metadata.rarity if card_metadata.rarity != "None" else None,
-                "set_name": set_name,
-                "set_id": set_id,
-            }
-            print("Card being processed: ", c)
-
-            cards_by_set[set_name].append(c)
-
-    print(cards_by_set)
-
-if __name__ == "__main__":
-    asyncio.run(main())
+app.include_router(router)
