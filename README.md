@@ -12,3 +12,4 @@ A program that takes multiple users' Pokemon TCGP cards and shows which ones are
       2. On MacOS/Linux, run: `source venv/bin/activate`
 3. Open a new terminal within your root directory
 4. Install all dependencies by running `pip install -r backend/requirements.txt`
+5. To run the API layer, go to the `backend` folder and run `uvicorn backend.src.main:app --reload`
