@@ -1,6 +1,7 @@
+import asyncio
 from http import HTTPStatus
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from tcgdexsdk import TCGdex
 
 from backend.src.models.TCGSetPayload import TCGSetPayload
@@ -32,10 +33,14 @@ tcgBaseEndpoint = "/external/tcg"
 @router.post(f"{tcgBaseEndpoint}/addCards")
 async def addCards(
         set_payload: TCGSetPayload,
+        background_tasks: BackgroundTasks,
         card_service: CardFetcherService = Depends(get_card_fetcher),
 ):
     set_name = set_payload.set_name
-    await card_service.getAllCardsBySet(set_name)
+    def run_sync():
+        asyncio.run(card_service.getAllCardsBySet(set_name))
+
+    background_tasks.add_task(run_sync)
 
     return {
         "message": f"Would add cards from set: {set_name}",
