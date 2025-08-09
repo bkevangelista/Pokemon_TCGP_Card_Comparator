@@ -2,6 +2,7 @@ import asyncio
 
 from dotenv import load_dotenv
 import os
+from boto3.dynamodb.conditions import Key
 import aioboto3
 
 from backend.src.models.CardMetadata import CardMetadata
@@ -49,3 +50,13 @@ class DynamoDBService:
         }
 
         await client.batch_write_item(RequestItems=request_items)
+
+    async def get_cards_by_set_id(self, set_id: str):
+        async with self.session.resource("dynamodb", region_name=self.region) as client:
+            table = await client.Table(self.table_name)
+            response = await table.query(
+                IndexName="set_id-local_id-index",
+                KeyConditionExpression=Key("set_id").eq(set_id),
+            )
+
+            return response["Items"]

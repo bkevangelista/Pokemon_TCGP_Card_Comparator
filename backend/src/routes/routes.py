@@ -51,5 +51,12 @@ async def addCards(
     }
 
 @router.get(f"{tcgBaseEndpoint}/getCards")
-async def getCards(set_name: str | None):
-   return {"message": f"Return all cards from set: {set_name}"}
+async def getCards(
+        set_id: str | None,
+        card_service: CardFetcherService = Depends(get_card_fetcher),
+):
+    cards_from_set = await card_service.db_service.get_cards_by_set_id(set_id)
+    return {
+        "message": f"Number of cards from set {set_id}: {len(cards_from_set)}",
+        "cards": cards_from_set,
+    }
