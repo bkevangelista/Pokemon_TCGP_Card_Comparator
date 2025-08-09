@@ -1,19 +1,23 @@
 import asyncio
-from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, status
 from tcgdexsdk import TCGdex
 
+from backend.src.factories.DynamoDBProvider import get_tcg_card_dynamodb_service
 from backend.src.models.TCGSetPayload import TCGSetPayload
 from backend.src.services.CardFetcherService import CardFetcherService
+from backend.src.services.DynamoDBService import DynamoDBService
 
 router = APIRouter()
 
 def get_tcgdex():
     return TCGdex()
 
-def get_card_fetcher(tcgdex: TCGdex = Depends(get_tcgdex)):
-    return CardFetcherService(tcgdex)
+def get_card_fetcher(
+        tcgdex: TCGdex = Depends(get_tcgdex),
+        db_service: DynamoDBService = Depends(get_tcg_card_dynamodb_service)
+):
+    return CardFetcherService(tcgdex, db_service)
 
 '''
 Base APIs
@@ -30,7 +34,7 @@ def health_check():
 APIs for TCGDex Service
 '''
 tcgBaseEndpoint = "/external/tcg"
-@router.post(f"{tcgBaseEndpoint}/addCards")
+@router.post(f"{tcgBaseEndpoint}/addCards", status_code=status.HTTP_202_ACCEPTED)
 async def addCards(
         set_payload: TCGSetPayload,
         background_tasks: BackgroundTasks,
@@ -38,13 +42,12 @@ async def addCards(
 ):
     set_name = set_payload.set_name
     def run_sync():
-        asyncio.run(card_service.getAllCardsBySet(set_name))
+        asyncio.run(card_service.insertAllCards(set_name))
 
     background_tasks.add_task(run_sync)
 
     return {
-        "message": f"Would add cards from set: {set_name}",
-        "statusCode": HTTPStatus.ACCEPTED,
+        "message": f"Accepted task to add cards from set: {set_name}",
     }
 
 @router.get(f"{tcgBaseEndpoint}/getCards")
