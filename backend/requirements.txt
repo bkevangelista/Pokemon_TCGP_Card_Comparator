@@ -2,3 +2,5 @@ tcgdex-sdk
 fastapi
 uvicorn
 requests
+aioboto3
+dotenv

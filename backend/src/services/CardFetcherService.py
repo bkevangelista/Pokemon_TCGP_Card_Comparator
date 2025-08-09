@@ -3,9 +3,13 @@ from collections import defaultdict
 
 from tcgdexsdk import TCGdex
 
+from backend.src.models.CardMetadata import CardMetadata
+from backend.src.services.DynamoDBService import DynamoDBService
+
 class CardFetcherService:
-    def __init__(self, tcgdex: TCGdex):
+    def __init__(self, tcgdex: TCGdex, db_service: DynamoDBService):
         self.tcgdex = tcgdex
+        self.db_service = db_service
 
     def findSetObjectFromSetName(self, set_name: str, tcgp_sets: list):
         for set_brief in tcgp_sets:
@@ -14,16 +18,17 @@ class CardFetcherService:
 
         return None
 
-    async def fetchCardData(self, card, set_name, set_id):
+    async def _fetchCardData(self, card, set_name, set_id):
         card_metadata = await self.tcgdex.card.get(card.id)
-        return {
-            "id": card.id,
-            "name": card.name,
-            "localId": card.localId,
-            "rarity": card_metadata.rarity if card_metadata.rarity != "None" else None,
-            "set_name": set_name,
-            "set_id": set_id,
-        }
+        return CardMetadata(
+            id=card.id,
+            name=card_metadata.name,
+            local_id=card_metadata.localId,
+            set_name=set_name,
+            set_id=set_id,
+            rarity=card_metadata.rarity if card_metadata.rarity != "None" else None,
+            image=card_metadata.image,
+        )
 
     async def getAllCardsBySet(self, set_name: str | None):
         # Init the SDK
@@ -39,7 +44,7 @@ class CardFetcherService:
                 cards = set_data.cards
 
                 card_tasks = [
-                    self.fetchCardData(card, set_name, set_id)
+                    self._fetchCardData(card, set_name, set_id)
                     for card in cards
                 ]
                 card_results = await asyncio.gather(*card_tasks)
@@ -56,7 +61,7 @@ class CardFetcherService:
                 cards = set_data.cards
 
                 card_tasks = [
-                    self.fetchCardData(card, set_name, set_id)
+                    self._fetchCardData(card, set_name, set_id)
                     for card in cards
                 ]
                 card_results = await asyncio.gather(*card_tasks)
@@ -64,3 +69,8 @@ class CardFetcherService:
                 cards_by_set[set_name].extend(card_results)
 
         return cards_by_set
+
+    async def insertAllCards(self, set_name: str | None):
+        cards_by_set = await self.getAllCardsBySet(set_name)
+        tasks = [self.db_service.batch_insert_cards(cards) for cards in cards_by_set.values()]
+        await asyncio.gather(*tasks)
