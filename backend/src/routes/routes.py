@@ -60,3 +60,13 @@ async def getCards(
         "message": f"Number of cards from set {set_id}: {len(cards_from_set)}",
         "cards": cards_from_set,
     }
+
+@router.get(f"{tcgBaseEndpoint}/getSets")
+async def getSets(
+        card_service: CardFetcherService = Depends(get_card_fetcher),
+):
+    set_mapping = await card_service.getSets()
+    return {
+        "message": "Successfully fetched set ID to set name mapping",
+        "tcgSets": set_mapping,
+    }

@@ -4,6 +4,7 @@ from collections import defaultdict
 from tcgdexsdk import TCGdex
 
 from backend.src.models.CardMetadata import CardMetadata
+from backend.src.models.TCGSetMapping import TCGSetMapping
 from backend.src.services.DynamoDBService import DynamoDBService
 
 class CardFetcherService:
@@ -31,7 +32,6 @@ class CardFetcherService:
         )
 
     async def getAllCardsBySet(self, set_name: str | None):
-        # Init the SDK
         tcgp_series = await self.tcgdex.serie.get("tcgp")
         tcgp_sets = tcgp_series.sets
 
@@ -74,3 +74,15 @@ class CardFetcherService:
         cards_by_set = await self.getAllCardsBySet(set_name)
         tasks = [self.db_service.batch_insert_cards(cards) for cards in cards_by_set.values()]
         await asyncio.gather(*tasks)
+
+    async def getSets(self):
+        tcgp_series = await self.tcgdex.serie.get("tcgp")
+        tcgp_sets = tcgp_series.sets
+
+        return [
+            TCGSetMapping(
+                set_id=tcgp_set.id,
+                set_name=tcgp_set.name,
+            )
+            for tcgp_set in tcgp_sets
+        ]
