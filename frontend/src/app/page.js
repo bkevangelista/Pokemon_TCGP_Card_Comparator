@@ -1,7 +1,7 @@
-import SetPage from "@/app/components/SetsPage";
-
 export default function Home() {
   return (
-    <SetPage />
+    <>
+        Pokemon TCGP Card Comparator
+    </>
   );
 }
