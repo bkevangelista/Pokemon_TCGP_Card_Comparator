@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import Select from "react-select"
 
+import { RARITY_CONSTANTS } from "@/app/constants/constants";
+
 export default function SetPage() {
     const [tcgpSets, setTCGPSets] = useState([]);
     const [selectedSet, setSelectedSet] = useState("");
@@ -142,7 +144,17 @@ export default function SetPage() {
                                         />
                                     </td>
                                     <td className="px-4 py-2 border border-gray-300">{card.name}</td>
-                                    <td className="px-4 py-2 border border-gray-300">{card.rarity}</td>
+                                    <td className="px-4 py-2 border border-gray-300">
+                                        {card.rarity && (
+                                            <Image
+                                                src={RARITY_CONSTANTS?.[card.rarity]}
+                                                alt={card.rarity}
+                                                width={100}
+                                                height={140}
+                                                className="object-contain"
+                                            />
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                             </tbody>
