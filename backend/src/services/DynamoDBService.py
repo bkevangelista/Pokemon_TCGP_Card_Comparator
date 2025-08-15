@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from boto3.dynamodb.conditions import Key
 import aioboto3
+from pydantic_core.core_schema import AnySchema
 
 from backend.src.models.CardMetadata import CardMetadata
 
@@ -30,7 +31,7 @@ class DynamoDBService:
             response = await table.get_item(Key={"id": card_id})
             return response.get("Item")
 
-    async def batch_insert_cards(self, cards: list[CardMetadata], batch_size: int = 25):
+    async def batch_insert_cards(self, cards: list[AnySchema], batch_size: int = 25) -> None:
         async with self.session.resource("dynamodb", region_name=self.region) as client:
             # Split input into batches of batch_size (limit is 25)
             batches = [
@@ -57,6 +58,16 @@ class DynamoDBService:
             response = await table.query(
                 IndexName="set_id-local_id-index",
                 KeyConditionExpression=Key("set_id").eq(set_id),
+            )
+
+            return response["Items"]
+
+    async def get_cards_by_user_and_set(self, user_id: str, set_id: str):
+        async with self.session.resource("dynamodb", region_name=self.region) as client:
+            table = await client.Table(self.table_name)
+            response = await table.query(
+                IndexName="user_id-set_id-index",
+                KeyConditionExpression=Key("user_id").eq(user_id) & Key("set_id").eq(set_id),
             )
 
             return response["Items"]

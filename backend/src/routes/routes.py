@@ -3,8 +3,9 @@ import asyncio
 from fastapi import APIRouter, Depends, BackgroundTasks, status
 from tcgdexsdk import TCGdex
 
-from backend.src.factories.DynamoDBProvider import get_tcg_card_dynamodb_service
+from backend.src.factories.DynamoDBProvider import get_tcg_card_dynamodb_service, get_user_card_dynamodb_service
 from backend.src.models.TCGSetPayload import TCGSetPayload
+from backend.src.models.UserCard import UserCard
 from backend.src.services.CardFetcherService import CardFetcherService
 from backend.src.services.DynamoDBService import DynamoDBService
 
@@ -16,6 +17,12 @@ def get_tcgdex():
 def get_card_fetcher(
         tcgdex: TCGdex = Depends(get_tcgdex),
         db_service: DynamoDBService = Depends(get_tcg_card_dynamodb_service)
+):
+    return CardFetcherService(tcgdex, db_service)
+
+def get_user_card_fetcher(
+        tcgdex: TCGdex = Depends(get_tcgdex),
+        db_service: DynamoDBService = Depends(get_user_card_dynamodb_service)
 ):
     return CardFetcherService(tcgdex, db_service)
 
@@ -69,4 +76,23 @@ async def getSets(
     return {
         "message": "Successfully fetched set ID to set name mapping",
         "tcgSets": set_mapping,
+    }
+
+@router.post(f"{tcgBaseEndpoint}/addUserCards")
+async def addUserCards(
+        user_payload: list[UserCard],
+        card_service: CardFetcherService = Depends(get_card_fetcher),
+):
+    await card_service.insertCardsForUser(user_payload)
+
+@router.get(f"{tcgBaseEndpoint}/getUserCardsBySet")
+async def getUserCardsBySet(
+        user_id: str,
+        set_id: str,
+        card_service: CardFetcherService = Depends(get_user_card_fetcher),
+):
+    cards = await card_service.getCardsOwnedByUserAndBySet(user_id, set_id)
+    return {
+        "message": f"Number of unique cards owned by user {user_id}: {len(cards)}",
+        "cards": cards,
     }
