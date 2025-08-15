@@ -5,6 +5,7 @@ from tcgdexsdk import TCGdex
 
 from backend.src.models.CardMetadata import CardMetadata
 from backend.src.models.TCGSetMapping import TCGSetMapping
+from backend.src.models.UserCard import UserCard
 from backend.src.services.DynamoDBService import DynamoDBService
 
 class CardFetcherService:
@@ -85,4 +86,20 @@ class CardFetcherService:
                 set_name=tcgp_set.name,
             )
             for tcgp_set in tcgp_sets
+        ]
+
+    async def insertCardsForUser(self, user_cards: list[UserCard]):
+        tasks = [self.db_service.batch_insert_cards(user_cards)]
+        await asyncio.gather(*tasks)
+
+    async def getCardsOwnedByUserAndBySet(self, user_id: str, set_id: str):
+        card_response = await self.db_service.get_cards_by_user_and_set(user_id, set_id)
+        return [
+            UserCard(
+                user_id=user_id,
+                card_id=card["card_id"],
+                set_id=set_id,
+                no_owned=int(card["no_owned"]),
+            )
+            for card in card_response
         ]

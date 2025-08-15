@@ -1,0 +1,7 @@
+from pydantic import BaseModel
+
+class UserCard(BaseModel):
+    user_id: str
+    card_id: str
+    set_id: str
+    no_owned: int

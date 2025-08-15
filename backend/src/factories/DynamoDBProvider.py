@@ -2,3 +2,6 @@ from backend.src.services.DynamoDBService import DynamoDBService
 
 def get_tcg_card_dynamodb_service() -> DynamoDBService:
     return DynamoDBService(table_name="TCG_Cards")
+
+def get_user_card_dynamodb_service() -> DynamoDBService:
+    return DynamoDBService(table_name="User_Cards")
