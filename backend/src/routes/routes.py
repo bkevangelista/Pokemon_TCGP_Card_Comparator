@@ -5,7 +5,7 @@ from tcgdexsdk import TCGdex
 
 from backend.src.factories.DynamoDBProvider import get_tcg_card_dynamodb_service, get_user_card_dynamodb_service
 from backend.src.models.TCGSetPayload import TCGSetPayload
-from backend.src.models.UserCard import UserCard
+from backend.src.models.UserCardPayload import UserCardPayload
 from backend.src.services.CardFetcherService import CardFetcherService
 from backend.src.services.DynamoDBService import DynamoDBService
 
@@ -80,10 +80,14 @@ async def getSets(
 
 @router.post(f"{tcgBaseEndpoint}/addUserCards")
 async def addUserCards(
-        user_payload: list[UserCard],
-        card_service: CardFetcherService = Depends(get_card_fetcher),
+        user_payload: UserCardPayload,
+        card_service: CardFetcherService = Depends(get_user_card_fetcher),
 ):
-    await card_service.insertCardsForUser(user_payload)
+    await card_service.insertCardsForUser(user_payload.cards)
+
+    return {
+        "message": "Successfully inserted cards for user!"
+    }
 
 @router.get(f"{tcgBaseEndpoint}/getUserCardsBySet")
 async def getUserCardsBySet(

@@ -42,7 +42,7 @@ class DynamoDBService:
             tasks = [self._write_batch(client, batch) for batch in batches]
             await asyncio.gather(*tasks)
 
-    async def _write_batch(self, client, batch: list[CardMetadata]):
+    async def _write_batch(self, client, batch: list[AnySchema]):
         request_items = {
             self.table_name: [
                 {"PutRequest": {"Item": card.model_dump()}}
