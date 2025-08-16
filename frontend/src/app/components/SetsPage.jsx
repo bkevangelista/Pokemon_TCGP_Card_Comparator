@@ -81,7 +81,7 @@ export default function SetPage() {
         } finally {
             setLoadingCards(false);
         }
-    }
+    };
 
     const handleSetChange = (e) => {
         const setId = e.value;
@@ -93,7 +93,7 @@ export default function SetPage() {
         } else {
             setCards([]);
         }
-    }
+    };
 
     const handleUserNameChange = (e) => {
         const user = e.target.value;
@@ -104,7 +104,7 @@ export default function SetPage() {
             setCards([]);
             setUserCards([]);
         }
-    }
+    };
 
     const handleUserCardsChange = (e, index) => {
         const value = parseInt(e.target.value, 10) || 0;
@@ -113,7 +113,24 @@ export default function SetPage() {
             updated[index] = { ...updated[index], no_owned: value };
             return updated;
         });
-    }
+    };
+
+    const handleSubmit = async () => {
+        const payload = { cards: userCards };
+
+        try {
+            const res = await fetch(apiRoutes.addUserCards, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            console.log(data.message);
+        } catch (err) {
+            console.error("Could not insert user cards: ", err);
+        }
+    };
 
     return (
         <div>
@@ -244,6 +261,17 @@ export default function SetPage() {
                         )}
                     </div>
                 )
+            )}
+
+            {(userName && selectedSet && userCards) && (
+                <div className="flex justify-center items-center mt-4 gap-2">
+                    <button
+                        onClick={handleSubmit}
+                        className="px-4 py-2 bg-gradient-to-b from-yellow-300 to-yellow-500 hover:scale-105 hover:from-yellow-400 hover:to-yellow-600 transition"
+                    >
+                        Submit Cards
+                    </button>
+                </div>
             )}
         </div>
     );
