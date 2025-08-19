@@ -100,3 +100,24 @@ async def getUserCardsBySet(
         "message": f"Number of unique cards owned by user {user_id}: {len(cards)}",
         "cards": cards,
     }
+
+@router.get(f"{tcgBaseEndpoint}/compareCardsForUsersToTrade")
+async def compareCardsForUsersToTrade(
+        user1: str,
+        user2: str,
+        set_id: str,
+        tcg_card_service: CardFetcherService = Depends(get_card_fetcher),
+        user_card_service: CardFetcherService = Depends(get_user_card_fetcher),
+):
+    if user1 == user2:
+        return {
+            "message": f"Passed in the same user - {user1}",
+            "cards": [],
+        }
+
+    cards_in_set = await tcg_card_service.db_service.get_cards_by_set_id(set_id)
+    cards = await user_card_service.compareCardsForUsersToTrade(user1, user2, set_id, cards_in_set)
+    return {
+        "message": f"Number of tradeable cards between {user1} and {user2}: {len(cards)}",
+        "cards": cards,
+    }
