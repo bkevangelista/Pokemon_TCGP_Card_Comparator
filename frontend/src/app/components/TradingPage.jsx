@@ -105,7 +105,7 @@ export default function TradingPage() {
 
     return (
         <div>
-            <h1 className="flex justify-center">Select a Pokémon TCGP Set</h1>
+            <h1 className="flex justify-center">Check which cards you can trade!</h1>
             <div className="flex justify-center m-4 space-x-4">
                 <input
                     type="text"
@@ -166,7 +166,7 @@ export default function TradingPage() {
                                 <th className="px-4 py-2 border border-gray-300">Card ID</th>
                                 <th className="px-4 py-2 border border-gray-300">Image</th>
                                 <th className="px-4 py-2 border border-gray-300">Rarity</th>
-                                <th className="px-4 py-2 border border-gray-300">Owner</th>
+                                <th className="px-4 py-2 border border-gray-300">Trainer</th>
                                 <th className="px-4 py-2 border border-gray-300">Quantity Owned</th>
                             </tr>
                             </thead>

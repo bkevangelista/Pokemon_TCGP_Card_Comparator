@@ -54,17 +54,40 @@ export default function SetPage() {
         fetchSets();
     }, []);
 
-    const initializeUserCards = (cards) => {
-        const initialUserCards = [];
-        cards.forEach(card => {
-            initialUserCards.push({
-                user_id: userName,
-                card_id: card.id,
-                set_id: card.set_id,
-                no_owned: 0
-            });
+    const mapInitialCards = (userCards) => {
+        const mapOfUserCards = {};
+        userCards.forEach((user) => {
+            mapOfUserCards[user.card_id] = user;
         });
+        return mapOfUserCards;
+    };
+
+    const initializeUserCards = (cards, previouslyOwnedCards) => {
+        const initialUserCards = [];
+        if (previouslyOwnedCards && previouslyOwnedCards.length > 0) {
+            const mapOfUserCards = mapInitialCards(previouslyOwnedCards);
+            console.log("map", mapOfUserCards);
+            cards.forEach(card => {
+                const userCard = mapOfUserCards[card.id];
+                initialUserCards.push({
+                    user_id: userName,
+                    card_id: userCard.card_id,
+                    set_id: userCard.set_id,
+                    no_owned: userCard.no_owned,
+                });
+            });
+        } else {
+            cards.forEach(card => {
+                initialUserCards.push({
+                    user_id: userName,
+                    card_id: card.id,
+                    set_id: card.set_id,
+                    no_owned: 0
+                });
+            });
+        }
         setUserCards(initialUserCards);
+        console.log(initialUserCards);
     };
 
     const fetchCards = async (setId) => {
@@ -74,8 +97,18 @@ export default function SetPage() {
             const data = await res.json();
             setCards(data.cards)
 
+            // Get all cards owned by user currently
+            let ownedCards = null;
+            console.log(userName, setId, "ownedCards");
+            if (userName) {
+                const userCardResponse = await fetch(apiRoutes.getUserCardsBySet(userName, setId));
+                const userCardData = await userCardResponse.json();
+                ownedCards = userCardData?.cards?.length ? userCardData.cards : [];
+            }
+            console.log(userName, setId, ownedCards);
+
             // Initialize the user cards state variable
-            initializeUserCards(data.cards)
+            initializeUserCards(data.cards, ownedCards)
         } catch (err) {
             console.error(`Error fetching cards of set id ${setId}: `, err);
         } finally {
@@ -134,7 +167,7 @@ export default function SetPage() {
 
     return (
         <div>
-            <h1 className="flex justify-center">Select a Pokémon TCGP Set</h1>
+            <h1 className="flex justify-center">Update your card count!</h1>
             <div className="flex justify-center m-4">
                 <input
                     type="text"
@@ -263,7 +296,7 @@ export default function SetPage() {
                 )
             )}
 
-            {(userName && selectedSet && userCards) && (
+            {(userName && selectedSet && userCards && !loadingCards) && (
                 <div className="flex justify-center items-center mt-4 gap-2">
                     <button
                         onClick={handleSubmit}

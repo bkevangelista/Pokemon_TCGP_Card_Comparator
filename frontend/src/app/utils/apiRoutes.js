@@ -7,6 +7,8 @@ const apiRoutes = {
     addUserCards: `${API_URL}/external/tcg/addUserCards`,
     compareCardsForUsersToTrade: (userOne, userTwo, setId) =>
         `${API_URL}/external/tcg/compareCardsForUsersToTrade?user1=${userOne}&user2=${userTwo}&set_id=${setId}`,
+    getUserCardsBySet: (userId, setId) =>
+        `${API_URL}/external/tcg/getUserCardsBySet?user_id=${userId}&set_id=${setId}`,
 };
 
 export default apiRoutes;
